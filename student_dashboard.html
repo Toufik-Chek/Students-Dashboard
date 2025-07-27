@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Students Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes bounce-in {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.05) rotate(3deg); }
+            70% { transform: scale(0.9) rotate(-1deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+        }
+        
+        .bounce-in { animation: bounce-in 0.6s ease-out; }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <div class="min-h-screen flex flex-col items-center justify-start px-4 py-8">
+        <div class="w-full max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
+                    📚 English Class Dashboard
+                </h1>
+                <p class="text-lg md:text-2xl text-purple-100 font-medium">Student Participation Tracker</p>
+            </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl p-6 text-white text-center transform hover:scale-105 transition-all duration-300">
+                <div class="text-4xl mb-2">👥</div>
+                <div class="text-2xl font-bold" id="total-students">0</div>
+                <div class="text-sm opacity-90">Total Students</div>
+            </div>
+            <div class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 text-white text-center transform hover:scale-105 transition-all duration-300">
+                <div class="text-4xl mb-2">⭐</div>
+                <div class="text-2xl font-bold" id="total-points">0</div>
+                <div class="text-sm opacity-90">Total Points</div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 text-white text-center transform hover:scale-105 transition-all duration-300">
+                <div class="text-4xl mb-2">🏆</div>
+                <div class="text-2xl font-bold" id="average-score">0</div>
+                <div class="text-sm opacity-90">Average Score</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl p-6 mb-8">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button id="edit-students-btn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200">
+                    ✏️ Edit Student List
+                </button>
+                <button id="reset-scores-btn" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200">
+                    🔄 Reset All Scores
+                </button>
+                <button id="export-data-btn" class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200">
+                    📊 Export Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Students List -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 mb-8">
+            <h2 class="text-3xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
+                🎯 Student Leaderboard
+            </h2>
+            <div id="students-container" class="space-y-4">
+                <!-- Students will be dynamically generated here -->
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-6 md:p-10 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl transform scale-100">
+                <h3 class="text-2xl md:text-4xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-3">
+                    <span class="text-3xl md:text-4xl">📝</span> Edit Student List
+                </h3>
+                <textarea 
+                    id="students-input" 
+                    placeholder="Enter student names, one per line:&#10;Alice Johnson&#10;Bob Smith&#10;Carol Davis"
+                    class="w-full h-64 md:h-80 p-4 md:p-6 border-2 border-purple-300 rounded-2xl focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-200 resize-none text-gray-700 text-sm md:text-base transition-all duration-200"
+                ></textarea>
+                <div class="flex flex-col sm:flex-row gap-4 mt-8">
+                    <button id="save-students-btn" class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 md:py-4 rounded-2xl font-semibold transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 text-sm md:text-base">
+                        <span class="text-xl">💾</span> Save Changes
+                    </button>
+                    <button id="cancel-edit-btn" class="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 md:py-4 rounded-2xl font-semibold transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 text-sm md:text-base">
+                        <span class="text-xl">❌</span> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="fixed top-4 right-4 bg-green-500 text-white px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl transform translate-x-full transition-transform duration-300 z-50 text-sm md:text-base font-medium max-w-xs md:max-w-sm">
+        </div>
+    </div>
+
+    <script>
+        class StudentDashboard {
+            constructor() {
+                this.students = [
+                    { name: 'Alice Johnson', score: 12 },
+                    { name: 'Bob Smith', score: 8 },
+                    { name: 'Carol Davis', score: 15 },
+                    { name: 'David Wilson', score: 6 },
+                    { name: 'Emma Brown', score: 11 },
+                    { name: 'Frank Miller', score: 9 },
+                    { name: 'Grace Taylor', score: 14 },
+                    { name: 'Henry Clark', score: 7 }
+                ];
+                
+                this.avatarEmojis = ['👨‍🎓', '👩‍🎓', '🧑‍💼', '👩‍💼', '👨‍🏫', '👩‍🏫', '🧑‍🎨', '👩‍🎨', '👨‍💻', '👩‍💻', '🧑‍🔬', '👩‍🔬'];
+                this.colors = [
+                    'from-pink-500 to-rose-500',
+                    'from-blue-500 to-indigo-500', 
+                    'from-green-500 to-emerald-500',
+                    'from-purple-500 to-violet-500',
+                    'from-orange-500 to-amber-500',
+                    'from-cyan-500 to-teal-500',
+                    'from-red-500 to-pink-500',
+                    'from-lime-500 to-green-500'
+                ];
+                
+                this.bindEvents();
+                this.renderStudents();
+                this.updateStats();
+            }
+
+            bindEvents() {
+                document.getElementById('edit-students-btn').onclick = () => this.openEditModal();
+                document.getElementById('save-students-btn').onclick = () => this.saveStudents();
+                document.getElementById('cancel-edit-btn').onclick = () => this.closeEditModal();
+                document.getElementById('reset-scores-btn').onclick = () => this.resetAllScores();
+                document.getElementById('export-data-btn').onclick = () => this.exportData();
+                
+                // Close modal when clicking outside
+                document.getElementById('edit-modal').onclick = (e) => {
+                    if (e.target.id === 'edit-modal') {
+                        this.closeEditModal();
+                    }
+                };
+            }
+
+            renderStudents() {
+                const container = document.getElementById('students-container');
+                
+                // Sort students by score (highest first)
+                const sortedStudents = [...this.students].sort((a, b) => b.score - a.score);
+                
+                container.innerHTML = sortedStudents.map((student, index) => {
+                    const colorClass = this.colors[index % this.colors.length];
+                    const avatar = this.avatarEmojis[index % this.avatarEmojis.length];
+                    const position = index + 1;
+                    const positionEmoji = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
+                    
+                    return `
+                        <div class="relative">
+                            <!-- Main Student Card -->
+                            <div class="bg-gradient-to-br ${colorClass} rounded-3xl p-6 md:p-8 card-hover transition-all duration-300 transform hover:-translate-y-2 shadow-xl border-2 border-white border-opacity-20 backdrop-blur-sm">
+                                <!-- Rank Badge -->
+                                <div class="absolute -top-3 -left-3 bg-white bg-opacity-90 backdrop-blur-sm rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center shadow-lg">
+                                    <span class="text-2xl md:text-3xl font-bold text-gray-800">#${position}</span>
+                                </div>
+                                
+                                <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+                                    <!-- Student Info Section -->
+                                    <div class="flex items-center gap-4 md:gap-6 w-full lg:w-auto">
+                                        <div class="relative">
+                                            <div class="text-5xl md:text-7xl drop-shadow-lg">${avatar}</div>
+                                            <div class="absolute -top-2 -right-2 text-2xl md:text-3xl">${positionEmoji}</div>
+                                        </div>
+                                        <div class="text-center lg:text-left">
+                                            <h3 class="text-xl md:text-3xl font-bold text-white mb-2 drop-shadow-sm">${student.name}</h3>
+                                            <div class="flex items-center justify-center lg:justify-start gap-2">
+                                                <div class="bg-white bg-opacity-25 rounded-full px-3 py-1">
+                                                    <span class="text-white opacity-90 text-sm md:text-base font-medium">Rank #${position}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Score & Action Section -->
+                                    <div class="flex items-center gap-6 md:gap-8 w-full lg:w-auto justify-center lg:justify-end">
+                                        <!-- Score Display -->
+                                        <div class="text-center bg-white bg-opacity-20 rounded-2xl p-4 md:p-6 backdrop-blur-sm border border-white border-opacity-30">
+                                            <div class="text-4xl md:text-6xl font-bold text-white drop-shadow-sm">${student.score}</div>
+                                            <div class="text-white opacity-90 text-sm md:text-base font-medium">points</div>
+                                        </div>
+                                        
+                                        <!-- Add Point Button -->
+                                        <button 
+                                            onclick="dashboard.addPoint('${student.name}')"
+                                            class="bg-white bg-opacity-25 hover:bg-opacity-40 text-white px-6 md:px-8 py-4 md:py-5 rounded-2xl font-semibold flex items-center gap-3 transform hover:scale-110 hover:-translate-y-1 transition-all duration-200 pulse-glow shadow-lg text-sm md:text-base border-2 border-white border-opacity-30 backdrop-blur-sm group"
+                                        >
+                                            <span class="text-xl md:text-2xl group-hover:scale-125 transition-transform duration-200">➕</span> 
+                                            <span class="hidden sm:inline">Add Point</span>
+                                            <span class="sm:hidden">+1</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Separator Line (except for last item) -->
+                            ${index < sortedStudents.length - 1 ? `
+                                <div class="flex items-center justify-center my-6 md:my-8">
+                                    <div class="h-px bg-gradient-to-r from-transparent via-white via-50% to-transparent w-full opacity-30"></div>
+                                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-2 mx-4 shadow-lg">
+                                        <div class="w-2 h-2 bg-white rounded-full opacity-60"></div>
+                                    </div>
+                                    <div class="h-px bg-gradient-to-r from-transparent via-white via-50% to-transparent w-full opacity-30"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addPoint(studentName) {
+                const student = this.students.find(s => s.name === studentName);
+                if (student) {
+                    student.score++;
+                    this.renderStudents();
+                    this.updateStats();
+                    this.showNotification(`🎉 Point added to ${studentName}! Total: ${student.score}`);
+                }
+            }
+
+            updateStats() {
+                const totalStudents = this.students.length;
+                const totalPoints = this.students.reduce((sum, student) => sum + student.score, 0);
+                const averageScore = totalStudents > 0 ? Math.round(totalPoints / totalStudents * 10) / 10 : 0;
+                
+                document.getElementById('total-students').textContent = totalStudents;
+                document.getElementById('total-points').textContent = totalPoints;
+                document.getElementById('average-score').textContent = averageScore;
+            }
+
+            openEditModal() {
+                const modal = document.getElementById('edit-modal');
+                const input = document.getElementById('students-input');
+                
+                input.value = this.students.map(s => s.name).join('\n');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            closeEditModal() {
+                const modal = document.getElementById('edit-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            saveStudents() {
+                const input = document.getElementById('students-input').value;
+                const names = input.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name.length > 0);
+                
+                if (names.length === 0) {
+                    this.showNotification('❌ Please enter at least one student name!', 'error');
+                    return;
+                }
+                
+                // Preserve existing scores for students who remain
+                const newStudents = names.map(name => {
+                    const existingStudent = this.students.find(s => s.name === name);
+                    return existingStudent ? existingStudent : { name, score: 0 };
+                });
+                
+                this.students = newStudents;
+                this.renderStudents();
+                this.updateStats();
+                this.closeEditModal();
+                this.showNotification('✅ Student list updated successfully!');
+            }
+
+            resetAllScores() {
+                if (confirm('Are you sure you want to reset all scores to 0?')) {
+                    this.students.forEach(student => student.score = 0);
+                    this.renderStudents();
+                    this.updateStats();
+                    this.showNotification('🔄 All scores have been reset!');
+                }
+            }
+
+            exportData() {
+                const sortedStudents = [...this.students].sort((a, b) => b.score - a.score);
+                const data = sortedStudents.map((student, index) => 
+                    `${index + 1}. ${student.name}: ${student.score} points`
+                ).join('\n');
+                
+                const blob = new Blob([`English Class Participation Scores\n\n${data}`], 
+                    { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'student_scores.txt';
+                a.click();
+                
+                URL.revokeObjectURL(url);
+                this.showNotification('📊 Data exported successfully!');
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                
+                if (type === 'error') {
+                    notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl transform transition-transform duration-300 z-50 text-sm md:text-base font-medium max-w-xs md:max-w-sm';
+                } else {
+                    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl transform transition-transform duration-300 z-50 text-sm md:text-base font-medium max-w-xs md:max-w-sm';
+                }
+                
+                notification.style.transform = 'translateX(0)';
+                
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                }, 3000);
+            }
+        }
+
+        // Initialize the dashboard
+        const dashboard = new StudentDashboard();
+    </script>
+</body>
+</html>
